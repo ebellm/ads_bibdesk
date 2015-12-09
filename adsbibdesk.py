@@ -311,6 +311,7 @@ def process_token(article_token, prefs, bibdesk):
         n=1, cutoff=.7)
     kept_pdfs = []
     kept_fields = {}
+    old_cite_key = None
     # first author is the same
     if found and difflib.SequenceMatcher(
             None,
@@ -332,6 +333,7 @@ def process_token(article_token, prefs, bibdesk):
             # plus BibDesk annotation
             kept_fields['BibDeskAnnotation'] = bibdesk(
                 'return its note', pid).stringValue()
+            old_cite_key = bibdesk('cite key', pid).stringValue()
             kept_pdfs += bibdesk.safe_delete(pid)
             notify('Duplicate publication removed',
                    article_token, ads_parser.title)
@@ -345,7 +347,10 @@ def process_token(article_token, prefs, bibdesk):
     # pub id
     pub = pub.descriptorAtIndex_(1).descriptorAtIndex_(3).stringValue()
     # automatic cite key
-    bibdesk('set cite key to generated cite key', pub)
+    if old_cite_key is None:
+        bibdesk('set cite key to generated cite key', pub)
+    else:
+        bibdesk('set cite key to "%s"' % old_cite_key, pub)
 
     # abstract
     if ads_parser.abstract.startswith('http://'):
